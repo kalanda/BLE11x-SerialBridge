@@ -1,0 +1,172 @@
+dim devicename(20)
+dim mac_address(6)
+dim input_data(20)
+dim input_data_length
+dim result
+dim empty_buffer(1)
+
+# clears the UART buffer by reading 10 times
+procedure clear_endpoint_buffer(endpoint)
+
+    if endpoint = system_endpoint_uart1 then
+        input_data_length = 1
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+        call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:1))
+    end if
+
+end
+
+event system_boot(major, minor, patch, build, ll_version, protocol, hw)
+
+    # set all PORT_0 pins to input/high
+    call hardware_io_port_config_direction(0, $0)
+    call hardware_io_port_write(0, $ff, $ff)
+
+    # set all PORT_1 pins to input/high (pull),
+    # except:
+    # P1_0 to output LOW (connection led)
+    # P1_1 to output HIGH (no internal pull-ups)
+    #
+    # NOTE: P1_0/1 will leak current if not externally pulled or set as outputs
+    #
+    call hardware_io_port_config_direction(1, $3)
+    call hardware_io_port_write(1, $ff, $fe)
+
+    ## set all PORT_2 pins to input/high (pull)
+    call hardware_io_port_config_direction(2, $0)
+    call hardware_io_port_write(2, $ff, $ff)
+
+    # enable interrupt on P1_7 rising edge
+    # (parameters are port=1, bitmask=0b10000000, edge=rising)
+    #call hardware_io_port_config_irq(1, 128, 0)
+
+    # disable uart watermarks
+    call system_endpoint_set_watermarks(system_endpoint_uart1, 0, 0)
+
+    #read the local devices public Bluetooth address
+    call system_address_get()(mac_address(0:6))
+
+    #create the device name buffer (ascii)
+    devicename(0:1) = 83 	 # S
+devicename(1:1) = 101 	 # e
+devicename(2:1) = 114 	 # r
+devicename(3:1) = 105 	 # i
+devicename(4:1) = 97 	 # a
+devicename(5:1) = 108 	 # l
+devicename(6:1) = 66 	 # B
+devicename(7:1) = 114 	 # r
+devicename(8:1) = 105 	 # i
+devicename(9:1) = 100 	 # d
+devicename(10:1) = 103 	 # g
+devicename(11:1) = 101 	 # e
+devicename(12:1) = 32 	 #  
+devicename(13:1) = (mac_address(2:1)/$10) + 48 + ((mac_address(2:1)/$10)/10*7) # MAC byte 4 10th digit
+devicename(14:1) = (mac_address(2:1)&$f)  + 48 + ((mac_address(2:1)&$f )/10*7) # MAC byte 4  1st digit
+devicename(15:1) = (mac_address(1:1)/$10) + 48 + ((mac_address(1:1)/$10)/10*7) # MAC byte 5 10th digit
+devicename(16:1) = (mac_address(1:1)&$f)  + 48 + ((mac_address(1:1)&$f )/10*7) # MAC byte 5  1st digit
+devicename(17:1) = (mac_address(0:1)/$10) + 48 + ((mac_address(0:1)/$10)/10*7) # MAC byte 6 10th digit
+devicename(18:1) = (mac_address(0:1)&$f)  + 48 + ((mac_address(0:1)&$f )/10*7) # MAC byte 6  1st digit
+
+
+
+    #write the device name characteristic
+    call attributes_write(c_device_name, 0, 20, devicename(0:20))
+
+    # disable uart watermarks
+    call system_endpoint_set_watermarks(system_endpoint_uart1, 0, 0)
+
+    # set advertisement interval to 400-600ms, and use all advertisement channels
+    # (note min/max parameters are in units of 625 uSec)
+    call gap_set_adv_parameters(640, 960, 7)
+
+    #set to advertising mode
+    call gap_set_mode(gap_general_discoverable, gap_undirected_connectable)
+
+end
+
+# Device disconnected event listener
+event connection_status(connection, flags, address, address_type, conn_interval, timeout, latency, bonding)
+
+    # set port 0 pin P1_0 to "1"
+    call hardware_io_port_write(1, $1, $1)
+
+    #clear the UART buffer
+    call clear_endpoint_buffer(system_endpoint_uart1)
+
+    #clear the data in the GATT
+    empty_buffer(0:1) = $0
+    call attributes_write(xgatt_rx, 0, 0, empty_buffer(0:0))
+
+    #enable the watermarks for RX here
+    call system_endpoint_set_watermarks(system_endpoint_uart1, 1, $ff) # set RX watermark
+
+end
+
+# Device disconnected event listener
+event connection_disconnected(connection ,reason)
+
+    # disable watermarks
+    call system_endpoint_set_watermarks(system_endpoint_uart1, 0, 0)
+
+    #clear the data in the GATT
+    empty_buffer(0:1) = $0
+    call attributes_write(xgatt_rx, 0, 0, empty_buffer(0:0))
+
+    #connection disconnected, continue advertising
+    call gap_set_mode(gap_general_discoverable, gap_undirected_connectable)
+
+     # set port 0 pin P1_0 to "0"
+    call hardware_io_port_write(1, $1, $0)
+
+end
+
+# System endpoint watermark event listener
+# Generated when there is data available from UART
+# in 16 bytes packets
+event system_endpoint_watermark_rx(endpoint, size)
+
+    if endpoint = system_endpoint_uart1 then
+
+      # disable RX watermark
+      call system_endpoint_set_watermarks(system_endpoint_uart1, 0, $ff)
+
+      input_data_length = size
+
+      if input_data_length > 20 then
+        input_data_length = 20
+      end if
+
+      # read data from UART
+      call system_endpoint_rx(system_endpoint_uart1, input_data_length)(result, input_data_length, input_data(0:input_data_length))
+
+      # Write data to GATT
+      call attributes_write(xgatt_rx, 0, input_data_length, input_data(0:input_data_length))
+
+      # enable RX watermark
+      call system_endpoint_set_watermarks(system_endpoint_uart1, 1, $ff)
+
+    end if
+
+end
+
+# Attributes event listener
+# Generated when any characteristic has been written
+event attributes_value(connection, reason, handle, offset, value_length, value_data)
+
+  # Characteristic TX has been written
+  if handle = xgatt_tx then
+    call hardware_io_port_write(1, $2, $0) # pseudo host_wakeup on (level down)
+    call system_endpoint_tx(system_endpoint_uart1, value_length, value_data(0:value_length))
+    call hardware_io_port_write(1, $2, $ff) # pseudo host_wakeup off (level up)
+  end if
+
+end
+

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<config>
+  <connections value="1"/>
+  <defrag enable="true" />
+  <throughput optimize="balanced" />
+  <script_timeout value="0" />
+</config>

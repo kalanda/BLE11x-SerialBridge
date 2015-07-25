@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<hardware>
+    <!--
+
+    UART PIN ASSIGNMENT TABLE:
+    +=========+===========+======+======+======+======+
+    | channel | alternate |  RX  |  TX  | RTS  | CTS  |
+    +=========+===========+======+======+======+======+
+    |    0    |     1     | P0_2 | P0_3 | P0_5 | P0_4 |
+    |    0    |     2     | P1_4 | P1_5 | P1_3 | P1_2 |
+    |    1    |     1     | P0_5 | P0_4 | P0_3 | P0_2 | (SELECTED)
+    |    1    |     2     | P1_7 | P1_6 | P1_5 | P1_4 |
+    +=========+===========+======+======+======+======+
+
+    -->
+    <sleeposc enable="true" ppm="30" />
+    <script enable="true" />
+    <slow_clock enable="false" />
+    <lock_debug enable="false" />
+    <sleep enable="true" />
+    <wakeup_pin enable="true" port="0" pin="7" state="up" />
+    <!--host_wakeup_pin enable="true" port="1" pin="1" state="up" /-->
+    <txpower power="15" bias="5" />
+    <port index="0" pull="down" tristatemask="0" />
+    <port index="1" pull="down" tristatemask="0" />
+    <port index="2" pull="down" tristatemask="0" />
+    <usb enable="false" endpoint="none" />
+    <usart mode="uart" channel="1" alternate="1" baud="9600" endpoint="none" flow="false" />
+</hardware>

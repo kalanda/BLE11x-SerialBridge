@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+
+  <!-- 1800: org.bluetooth.service.generic_access -->
+  <service uuid="1800" id="generic_access">
+    <description>Generic Access</description>
+
+    <!-- 2A00: org.bluetooth.characteristic.gap.device_name -->
+    <characteristic uuid="2A00" id="c_device_name">
+        <description>Device Name</description>
+        <properties read="true"/>
+        <value length="20">01234567890123456789</value>
+        <!--value>Lightmote</value-->
+    </characteristic>
+
+    <!-- 2A01: org.bluetooth.characteristic.gap.appearance -->
+    <characteristic uuid="2A01" id="c_appearance">
+        <description>Appearance</description>
+        <properties read="true" const="true" />
+        <value type="hex">0100</value>
+    </characteristic>
+
+  </service>
+
+  <!-- 1804: org.bluetooth.service.tx_power -->
+  <service uuid="1804" id="tx_power_level">
+    <description>Tx Power Level</description>
+
+    <!-- 2A07: org.bluetooth.characteristic.tx_power_level -->
+    <characteristic uuid="2A07" id="c_tx_power_level">
+        <description>Tx Power</description>
+        <properties read="true" const="true" />
+        <value type="hex">03</value>
+    </characteristic>
+
+  </service>
+
+  <!-- 180A: org.bluetooth.service.device_information -->
+  <service uuid="180A" id="device_information">
+    <description>Device Information</description>
+
+    <!-- 2A29: org.bluetooth.characteristic.manufacturer_name_string -->
+    <characteristic uuid="2a29" id="c_manufacturer_name">
+      <description>Manufacturer Name</description>
+      <properties read="true" const="true" />
+      <value>Kalanda</value>
+    </characteristic>
+
+    <!-- 2A24: org.bluetooth.characteristic.model_number_string -->
+    <characteristic uuid="2a24" id="c_model_number">
+      <description>Model Number String</description>
+      <properties read="true" const="true" />
+      <value>SerialBridge 1.0.0</value>
+    </characteristic>
+
+    <!-- 2A26: org.bluetooth.characteristic.firmware_revision_string -->
+    <characteristic uuid="2a26" id="c_firmware_revision">
+      <description>Firmware Revision String</description>
+      <properties read="true" const="true" />
+      <value>1.0.0</value>
+    </characteristic>
+
+    <!-- 2A27: org.bluetooth.characteristic.hardware_revision_string -->
+    <characteristic uuid="2a27" id="c_hardware_revision">
+      <description>Hardware Revision String</description>
+      <properties read="true" const="true" />
+      <value>1.0.0</value>
+    </characteristic>
+
+  </service>
+
+  <!-- Simple UART Service -->
+  <service uuid="15AC87B6-022A-430E-9FB3-31EBB8D0BEAF" advertise="true" id="simple_uart_service">
+    <description>Simple UART Service</description>
+
+    <characteristic uuid="EF84F28A-B51E-49FE-9FD6-F25B05C2C4A0" id="xgatt_rx">
+      <properties read="true" notify="true"/>
+      <value length="20" type="hex" variable_length="true"></value>
+      <description>RX</description>
+    </characteristic>
+
+    <characteristic uuid="2CB8ADAC-7402-47FF-9937-A841CA766CA5" id="xgatt_tx">
+      <properties read="true" write="true" />
+      <value length="20" type="hex" variable_length="true"></value>
+      <description>TX</description>
+    </characteristic>
+
+  </service>
+
+</configuration>
