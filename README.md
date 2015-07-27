@@ -6,11 +6,11 @@ This is a firmware for creating a BLE to serial UART bridge using Bluegiga's BLE
 
 The BLE11x pins are used as follows:
 
-	TX                 P0_4  
-	RX                 P0_5
-	Module Wakeup      P0_7  (Pull it DOWN to wakeup the module from sleep and wait at least 1ns before send data)
-	Host HCI Wakeup    P1_1  (The module pulls it DOWN before send data to wakeup your HCI in case is required)
-	Status LED         P1_0  (Will be HIGH when connected and LOW in advertising mode)
+	TX             P0_4  
+	RX             P0_5
+	Module Wakeup  P0_7  (Pull it DOWN to wakeup the module from sleep and wait at least 1ns before send data)
+	HCI Wakeup     P1_1  (The module pulls it DOWN before send data to wakeup your HCI in case is required)
+	Status LED     P1_0  (Will be HIGH when connected and LOW in advertising mode)
   
 *HCI = Host Control Interface or also knows as your microcontroller
 
